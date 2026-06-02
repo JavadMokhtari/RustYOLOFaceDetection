@@ -1,2 +1,6 @@
 /target
 .idea
+test/*.jpg
+test/*.exe
+test/*.obj
+test/*.onnx
