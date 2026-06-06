@@ -4,3 +4,4 @@ test/*.jpg
 test/*.exe
 test/*.obj
 test/*.onnx
+test/*.dll*
