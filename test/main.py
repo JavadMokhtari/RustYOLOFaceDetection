@@ -27,7 +27,7 @@ lib.detect_faces.argtypes = [
 lib.detect_faces.restype = ctypes.c_int
 
 model_path = str(cur_dir / "yolov11s-face.onnx").encode("utf-8")
-image_path = str(cur_dir / "underexposed-vs-overexposed.jpg").encode("utf-8")
+image_path = str(cur_dir / "two_face_boy.jpg").encode("utf-8")
 
 # Initialize ONNX session
 ret = lib.init_session(model_path)
