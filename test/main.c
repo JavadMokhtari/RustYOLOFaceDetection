@@ -130,28 +130,27 @@
 
 int main()
 {
-
     int ret = init_session("yolov11s-face.onnx");
 
     if (ret != 0)
     {
-        printf("Init failed\n");
+        printf("Init failed: %d\n", ret);
         return -1;
     }
 
-    FaceBox boxes[32];
+    FaceBox boxes[1];
 
-    int exe_code = detect_face_from_file("cool_girl.jpg", boxes);
-
+    int exe_code = detect_face_from_file("cool_girl.jpg", &boxes[0]);
     printf("Process executed: %d\n", exe_code);
+
     if (exe_code == 0)
     {
-        for (int i = 0; i < 32; i++)
+        for (int i = 0; i < 1; i++)
         {
 
             printf(
                 "Box %d: %.2f %.2f %.2f %.2f conf=%.2f\n",
-                i,
+                i + 1,
                 boxes[i].x1,
                 boxes[i].y1,
                 boxes[i].x2,
@@ -161,6 +160,5 @@ int main()
     };
 
     release_session();
-
     return 0;
 }

@@ -2,12 +2,13 @@ mod detector;
 mod models;
 mod utils;
 
-use crate::detector::{detect_face_from_image, detect_face_from_images, SESSION};
+use crate::detector::{detect_face_from_image, SESSION};
 use crate::models::FaceBox;
 use crate::utils::get_path_from_cstr;
-use image::DynamicImage;
-use ort::{ep::CUDA, session::Session};
+use ort::session::builder::GraphOptimizationLevel;
+use ort::{ep, session::Session};
 use std::os::raw::{c_char, c_int};
+use std::time;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn init_session(model_path: *const c_char) -> c_int {
@@ -18,8 +19,17 @@ pub extern "C" fn init_session(model_path: *const c_char) -> c_int {
 
     let session = match Session::builder() {
         Ok(builder) => {
-            let mut builder = match builder.with_execution_providers([CUDA::default().build()]) {
-                Ok(v) => v,
+            let mut builder = match builder.with_optimization_level(GraphOptimizationLevel::Level3)
+            {
+                Ok(builder) => match builder.with_intra_threads(num_cpus::get_physical()) {
+                    Ok(builder) => {
+                        match builder.with_execution_providers([ep::CUDA::default().build()]) {
+                            Ok(builder) => builder,
+                            Err(_) => return -3,
+                        }
+                    }
+                    Err(_) => return -3,
+                },
                 Err(_) => return -3,
             };
 
@@ -35,6 +45,33 @@ pub extern "C" fn init_session(model_path: *const c_char) -> c_int {
     *global_session = Some(session);
     0
 }
+
+// #[unsafe(no_mangle)]
+// pub extern "C" fn init_session(model_path: *const c_char) -> c_int {
+//     let model_path = match get_path_from_cstr(model_path) {
+//         Ok(path) => path,
+//         Err(err_code) => return err_code,
+//     };
+//
+//     let session = match Session::builder() {
+//         Ok(builder) => {
+//             let mut builder = match builder.with_execution_providers([ep::CUDA::default().build()]) {
+//                 Ok(v) => v,
+//                 Err(_) => return -3,
+//             };
+//
+//             match builder.commit_from_file(model_path) {
+//                 Ok(session) => session,
+//                 Err(_) => return -4,
+//             }
+//         }
+//         Err(_) => return -5,
+//     };
+//
+//     let mut global_session = SESSION.lock().unwrap();
+//     *global_session = Some(session);
+//     0
+// }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn release_session() {
@@ -54,36 +91,43 @@ pub extern "C" fn detect_face_from_file(image_path: *const c_char, out_box: *mut
         Err(code) => return code,
     };
 
-    let mut tmp = DynamicImage::new_rgba8(img.width(), img.height());
-    img.clone_into(&mut tmp);
-    let images = vec![tmp; 32];
+    // let mut tmp = DynamicImage::new_rgba8(img.width(), img.height());
+    // img.clone_into(&mut tmp);
+    // let images = vec![tmp; 16];
 
-    // let face_box = match detect_face_from_images(img) {
-    //     Ok(bb) => bb,
-    //     Err(code) => return code,
-    // };
+    let start = time::Instant::now();
 
-    let outputs = detect_face_from_images(images);
-    let mut face_box = Vec::new();
-    for res in outputs {
-        face_box.push(res.unwrap_or_else(|_| FaceBox {
-            x1: 0.0,
-            y1: 0.0,
-            x2: 0.0,
-            y2: 0.0,
-            confidence: 0.0,
-        }));
-    }
+    let face_box = match detect_face_from_image(img) {
+        Ok(bb) => bb,
+        Err(code) => return code,
+    };
 
-    // unsafe {
-    //     *out_box = face_box;
+    // let outputs = detect_face_from_images(images);
+
+    let elapsed = start.elapsed();
+    println!("Processing time: {:?}", elapsed);
+
+    // let mut face_box = Vec::new();
+    // for res in outputs {
+    //     face_box.push(res.unwrap_or_else(|_| FaceBox {
+    //         x1: 0.0,
+    //         y1: 0.0,
+    //         x2: 0.0,
+    //         y2: 0.0,
+    //         confidence: 0.0,
+    //     }));
     // }
 
     unsafe {
-        for i in 0..face_box.len() {
-            *out_box.add(i) = face_box[i];
-        }
+        *out_box = face_box;
     }
+
+    // unsafe {
+    //     for i in 0..face_box.len() {
+    //         *out_box.add(i) = face_box[i];
+    //     }
+    // }
+
     0
 }
 
