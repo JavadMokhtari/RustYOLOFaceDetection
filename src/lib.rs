@@ -1,12 +1,10 @@
 mod configs;
 mod detector;
-mod errors;
 mod models;
 mod utils;
 
 use crate::detector::{SESSION, detect_face};
-use crate::errors::FaceDetectionResponse;
-use crate::models::FaceBox;
+use crate::models::{FaceBox, FaceDetectionResponse};
 use crate::utils::get_path_from_cstr;
 use ort::session::builder::GraphOptimizationLevel;
 use ort::{ep, session::Session};

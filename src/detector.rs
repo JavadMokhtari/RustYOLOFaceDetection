@@ -1,6 +1,5 @@
 use crate::configs::*;
-use crate::errors::FaceDetectionResponse;
-use crate::models::FaceBox;
+use crate::models::{FaceBox, FaceDetectionResponse};
 use crate::utils::iou;
 use image::DynamicImage;
 use image::imageops::FilterType;

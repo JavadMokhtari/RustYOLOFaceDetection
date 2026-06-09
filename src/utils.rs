@@ -1,6 +1,5 @@
-use crate::models::FaceBox;
-use crate::errors::FaceDetectionResponse;
-use std::ffi::{c_int, CStr};
+use crate::models::{FaceBox, FaceDetectionResponse};
+use std::ffi::{CStr, c_int};
 use std::os::raw::c_char;
 use std::path::Path;
 
@@ -15,7 +14,11 @@ fn intersection(a: &FaceBox, b: &FaceBox) -> f32 {
     let y1 = a.y1.max(b.y1);
     let x2 = a.x2.min(b.x2);
     let y2 = a.y2.min(b.y2);
-    if x1 >= x2 || y1 >= y2 { 0.0 } else { (x2 - x1) * (y2 - y1) }
+    if x1 >= x2 || y1 >= y2 {
+        0.0
+    } else {
+        (x2 - x1) * (y2 - y1)
+    }
 }
 
 fn union(a: &FaceBox, b: &FaceBox) -> f32 {
