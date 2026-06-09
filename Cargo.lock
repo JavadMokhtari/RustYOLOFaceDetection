@@ -330,7 +330,6 @@ dependencies = [
  "image",
  "ndarray",
  "num_cpus",
- "once_cell",
  "ort",
 ]
 

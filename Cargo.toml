@@ -10,5 +10,4 @@ crate-type = ["cdylib"]
 ort = { version = "2.0.0-rc.12", features = ["cuda"] }
 image = "0.25.10"  # Image loading
 ndarray = "0.17.2"  # Tensor operations
-once_cell = "1.19.0"
-num_cpus = "1.17.0"  # Global session
+num_cpus = "1.17.0"
