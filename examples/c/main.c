@@ -8,7 +8,7 @@ int main()
     FaceDetectionResponse result;
 
     // Initialize ONNX session
-    result = init_session("yolov11s-face.onnx");
+    result = init_session("../../models/yolov11s-face.onnx");
 
     if (result != SUCCESS)
     {
@@ -22,7 +22,7 @@ int main()
     FaceBox box;
 
     // Run face detection from file
-    result = detect_face_from_file("cool_girl.jpg", &box);
+    result = detect_face_from_file("../../assets/cool_girl.jpg", &box);
 
     if (result != SUCCESS)
     {
@@ -40,7 +40,7 @@ int main()
     printf("\tConfidence: %.4f\n}\n", box.confidence);
 
     // Run face detection from memory
-    FILE *fp = fopen("cool_girl.jpg", "rb");
+    FILE *fp = fopen("../../assets/cool_girl.jpg", "rb");
 
     if (!fp)
     {

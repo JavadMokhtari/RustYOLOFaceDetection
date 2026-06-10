@@ -22,9 +22,9 @@ class FaceBox(ctypes.Structure):
 
 cur_dir = Path(__file__).parent
 
-dll_path = cur_dir / "facedetector.dll"
-model_path = cur_dir / "yolov11s-face.onnx"
-image_path = cur_dir / "cool_girl.jpg"
+dll_path = cur_dir / "../../target/release/facedetector.dll"
+model_path = cur_dir / "../../models/yolov11s-face.onnx"
+image_path = cur_dir / "../../assets/cool_girl.jpg"
 
 
 # ==========================================
