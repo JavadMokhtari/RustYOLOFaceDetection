@@ -1,14 +1,155 @@
+//! Face detection module using ONNX Runtime
+//!
+//! This module provides functionality for detecting faces in images using a pre-trained ONNX model.
+//! It handles model loading, image preprocessing, inference, and post-processing including
+//! Non-Maximum Suppression (NMS) to filter overlapping detections.
+//!
+//! # Organization
+//! - [`SESSION`] - Global ONNX runtime session singleton
+//! - [`init_onnx_session`] - Initialize the model from a file path
+//! - [`detect_face`] - Detect a single face in an image
+//!
+//! # Related Modules
+//! - `crate::configs` - Configuration constants (model size, confidence thresholds)
+//! - `crate::models` - Face detection data structures
+//! - `crate::utils` - Utility functions like IoU calculation
+
 use crate::configs::*;
 use crate::models::{FaceBox, FaceDetectionResponse};
 use crate::utils::iou;
+
 use image::DynamicImage;
 use image::imageops::FilterType;
 use ndarray::{Array4, Axis, s};
-use ort::{session::Session, value::TensorRef};
+use ort::session::builder::GraphOptimizationLevel;
+use ort::{ep, session::Session, value::TensorRef};
+use std::path::Path;
 use std::sync::{LazyLock, Mutex};
 
+/// Global ONNX Runtime session instance protected by a mutex for thread-safe lazy initialization.
+///
+/// This session is initialized once by calling [`init_onnx_session`] and then reused for all
+/// subsequent face detection calls. The mutex ensures safe concurrent access from multiple threads.
 pub static SESSION: LazyLock<Mutex<Option<Session>>> = LazyLock::new(|| Mutex::new(None));
 
+/// Initializes the ONNX Runtime session with a model from the specified path.
+///
+/// This function loads a pre-trained face detection ONNX model, configures optimization level 3,
+/// sets the number of threads to the number of physical CPU cores, and attempts to use CUDA
+/// execution provider for GPU acceleration (falls back to CPU if CUDA is unavailable).
+///
+/// # Arguments
+/// * `model_path` - Path to the ONNX model file
+///
+/// # Returns
+/// * `FaceDetectionResponse::Success` - Session initialized successfully
+/// * `FaceDetectionResponse::InvalidONNXModelPath` - The model file does not exist
+/// * `FaceDetectionResponse::ExecutionProviderError` - Failed to configure execution providers
+/// * `FaceDetectionResponse::SessionInitializationError` - Failed to set optimization or thread options
+/// * `FaceDetectionResponse::ONNXModelLoadingError` - Failed to load model from file
+/// * `FaceDetectionResponse::SessionBuilderError` - Failed to create session builder
+///
+/// # Panics
+/// This function may panic if the global session mutex is poisoned (another thread panicked while holding the lock).
+///
+/// # Examples
+/// ```rust,no_run
+/// use std::path::Path;
+/// use facedetector::detector::init_onnx_session;
+///
+/// let model_path = Path::new("models/face_detector.onnx");
+/// let result = init_onnx_session(model_path);
+/// assert!(matches!(result, FaceDetectionResponse::Success));
+/// ```
+pub fn init_onnx_session(model_path: &Path) -> FaceDetectionResponse {
+    if !model_path.is_file() {
+        return FaceDetectionResponse::InvalidONNXModelPath;
+    }
+
+    let session = match Session::builder() {
+        Ok(builder) => {
+            let mut builder = match builder.with_optimization_level(GraphOptimizationLevel::Level3)
+            {
+                Ok(builder) => match builder.with_intra_threads(num_cpus::get_physical()) {
+                    Ok(builder) => {
+                        match builder.with_execution_providers([ep::CUDA::default().build()]) {
+                            Ok(builder) => builder,
+                            Err(_) => {
+                                return FaceDetectionResponse::ExecutionProviderError;
+                            }
+                        }
+                    }
+                    Err(_) => return FaceDetectionResponse::SessionInitializationError,
+                },
+                Err(_) => return FaceDetectionResponse::SessionInitializationError,
+            };
+
+            match builder.commit_from_file(model_path) {
+                Ok(session) => session,
+                Err(_) => return FaceDetectionResponse::ONNXModelLoadingError,
+            }
+        }
+        Err(_) => return FaceDetectionResponse::SessionBuilderError,
+    };
+
+    let mut global_session = SESSION.lock().unwrap();
+    *global_session = Some(session);
+
+    FaceDetectionResponse::Success
+}
+
+/// Detects a single face in the provided image using the initialized ONNX model.
+///
+/// This function performs the complete face detection pipeline: preprocessing (resize, normalization),
+/// model inference, and post-processing (confidence filtering, bounding box scaling, NMS).
+///
+/// # Arguments
+/// * `img` - DynamicImage to analyze for face detection
+///
+/// # Returns
+/// * `Ok(FaceBox)` - Successfully detected a single face with bounding box coordinates and confidence
+/// * `Err(i32)` - Error code from `FaceDetectionResponse`, including:
+///   - `ImagePreprocessingError` - Failed to preprocess image or create tensor
+///   - `SessionGuardError` - Session not initialized (call `init_onnx_session` first)
+///   - `InferenceError` - ONNX inference failed
+///   - `PostProcessingError` - Failed to extract or parse output tensor
+///   - `NoFaceDetected` - No faces found meeting confidence threshold
+///   - `MultipleFaceDetected` - Multiple faces detected after NMS (function expects exactly one)
+///
+/// # Panics
+/// - Panics if the global session mutex is poisoned
+/// - May panic if tensor operations encounter invalid shapes (though errors are mapped to return values)
+///
+/// # Examples
+/// ```rust,no_run
+/// use image::DynamicImage;
+/// # use facedetector::detector::{init_onnx_session, detect_face};
+/// # use std::path::Path;
+///
+/// // Initialize session first
+/// let model_path = Path::new("models/face_detector.onnx");
+/// init_onnx_session(model_path);
+///
+/// // Load and detect face
+/// let img = DynamicImage::new_rgb8(640, 480);
+/// match detect_face(img) {
+///     Ok(face) => {
+///         println!("Detected face at x1={}, y1={}, x2={}, y2={} with confidence {}",
+///                  face.x1, face.y1, face.x2, face.y2, face.confidence);
+///     }
+///     Err(code) => {
+///         println!("Detection failed with code: {}", code);
+///     }
+/// }
+/// ```
+///
+/// # Processing Details
+/// 1. **Preprocessing**: Resizes image to `IMG_SIZE` × `IMG_SIZE` using triangle filtering,
+///    converts to RGB, normalizes pixel values to [0,1], and formats as CHW tensor (1×3×H×W)
+/// 2. **Inference**: Runs the ONNX model expecting input named "images" and output named "output0"
+/// 3. **Post-processing**: Transposes output tensor, filters by `CONFIDENCE` threshold,
+///    scales bounding boxes to original image dimensions, applies Non-Maximum Suppression
+///    with IoU threshold `IOU`
 pub fn detect_face(img: DynamicImage) -> Result<FaceBox, i32> {
     let (orig_w, orig_h) = (img.width() as f32, img.height() as f32);
 

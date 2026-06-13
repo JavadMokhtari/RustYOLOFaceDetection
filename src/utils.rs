@@ -27,7 +27,7 @@ fn union(a: &FaceBox, b: &FaceBox) -> f32 {
     area_a + area_b - intersection(a, b)
 }
 
-pub fn get_path_from_cstr<'a>(path_ptr: *const c_char) -> Result<&'a Path, c_int> {
+pub fn convert_cstring_to_path<'a>(path_ptr: *const c_char) -> Result<&'a Path, c_int> {
     if path_ptr.is_null() {
         return Err(FaceDetectionResponse::NullPointerError as c_int);
     }
