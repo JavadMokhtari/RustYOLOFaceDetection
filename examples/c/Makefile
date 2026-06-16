@@ -1,38 +1,32 @@
 # Complete Makefile with build, copy, and run
 CC = cl
+
+CURDIR = $(MAKEDIR)
+ROOT = $(MAKEDIR)\..\..
+
 CFLAGS = /I "include"
-LIBS = ..\..\target\release\facedetector.dll.lib
-TARGET = main.exe
+LIBS = $(ROOT)\target\release\facedetector.dll.lib
 SRC = main.c
-DLL_SOURCE = ..\..\target\release\facedetector.dll
-DLL_DEST = .\facedetector.dll
+TARGET = main.exe
+DLL_SOURCE = $(ROOT)\target\release\facedetector.dll
+DLL_DEST = $(CURDIR)\facedetector.dll
 
 all: help
 
 help:
-	@echo --------------- FACEDETECTOR C EXAMPLE - MAKE COMMANDS ---------------
-	@echo ======================================================================
 	@echo.
-	@echo - (none) - - - - - - Show this help
-	@echo - build - - - - - -- Build executable and copy DLL
-	@echo - run - - - - - - -- Build, copy DLL, and run
-	@echo - clean - - - - - -- Remove all generated files
-	@echo - help - - - - - - - Show this help
+	@echo ================= FaceDetector Example =================
+	@echo nmake build   - Build executable and copy DLL
+	@echo nmake run     - Build and run
+	@echo nmake clean   - Remove build directory
+	@echo ========================================================
 	@echo.
-	@echo ======================================================================
-
 
 build: $(TARGET)
 
 $(TARGET): $(SRC)
 	$(CC) $(CFLAGS) $(SRC) $(LIBS) /Fe$(TARGET) /nologo
-
-	@if exist "$(DLL_SOURCE)" ( \
-		copy /Y "$(DLL_SOURCE)" "$(DLL_DEST)" >nul
-	) else ( \
-		echo [ERROR] DLL not found: $(DLL_SOURCE) && \
-		exit 1 \
-	)
+	@copy /Y $(DLL_SOURCE) $(DLL_DEST) >nul
 
 run: build
 	@$(TARGET)
