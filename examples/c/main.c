@@ -5,10 +5,13 @@
 
 int main()
 {
+    const char *model_path = "../../models/yolov11s-face.onnx";
+    const char *image_path = "../../assets/cool_girl.jpg";
+
     FaceDetectionResponse result;
 
     // Initialize ONNX session
-    result = init_session("../../models/yolov11s-face.onnx");
+    result = init_session(model_path);
 
     if (result != SUCCESS)
     {
@@ -22,7 +25,7 @@ int main()
     FaceBox box;
 
     // Run face detection from file
-    result = detect_face_from_file("../../assets/cool_girl.jpg", &box);
+    result = detect_face_from_file(image_path, &box);
 
     if (result != SUCCESS)
     {
@@ -40,7 +43,7 @@ int main()
     printf("\tConfidence: %.4f\n}\n", box.confidence);
 
     // Run face detection from memory
-    FILE *fp = fopen("../../assets/cool_girl.jpg", "rb");
+    FILE *fp = fopen(image_path, "rb");
 
     if (!fp)
     {
