@@ -236,7 +236,16 @@ pub fn detect_face(img: DynamicImage) -> Result<FaceBox, i32> {
     }
 
     match faces.len() {
-        1 => Ok(faces[0]),
+        1 => Ok({
+            let face = faces[0];
+            FaceBox {
+                x1: face.x1.clamp(0.0, orig_w),
+                y1: face.y1.clamp(0.0, orig_h),
+                x2: face.x2.clamp(0.0, orig_w),
+                y2: face.y2.clamp(0.0, orig_h),
+                confidence: face.confidence.clamp(0.0, 1.0),
+            }
+        }),
         0 => Err(FaceDetectionResponse::NoFaceDetected as i32),
         _ => Err(FaceDetectionResponse::MultipleFaceDetected as i32),
     }
