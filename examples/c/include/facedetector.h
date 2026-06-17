@@ -21,10 +21,11 @@ extern "C"
 
         /* IO / Input Errors (10-19) */
         NULL_POINTER = 10,
-        PATH_UTF8_ERROR = 11,
-        INVALID_ONNX_PATH = 12,
-        INVALID_IMAGE_PATH = 13,
-        EMPTY_INPUT_IMAGE = 14,
+        ZERO_LENGTH_BYTES_ERROR = 11,
+        PATH_UTF8_ERROR = 12,
+        INVALID_ONNX_PATH = 13,
+        INVALID_IMAGE_PATH = 14,
+        EMPTY_INPUT_IMAGE = 15,
 
         /* Session Errors (20-29) */
         SESSION_GUARD_ERROR = 20,
