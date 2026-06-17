@@ -14,10 +14,11 @@ pub enum FaceDetectionResponse {
     Success = 0,
     // IO Errors
     NullPointerError = 10,
-    PathUTF8Error = 11,
-    InvalidONNXModelPath = 12,
-    InvalidImagePath = 13,
-    EmptyInputImage = 14,
+    ZeroLengthBytesError = 11,
+    PathUTF8Error = 12,
+    InvalidONNXModelPath = 13,
+    InvalidImagePath = 14,
+    EmptyInputImageError = 15,
     // Session Errors
     SessionGuardError = 20,
     SessionBuilderError = 21,
