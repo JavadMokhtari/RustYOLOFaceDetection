@@ -58,39 +58,51 @@ extern "C"
     } FaceBox;
 
     /**
+     * @brief Returns the library version string (e.g. "0.1.0").
+     *
+     * The returned pointer is valid for the lifetime of the program
+     * and must not be freed by the caller.
+     *
+     * @return Null-terminated version string.
+     */
+    const char *facedetector_version(void);
+
+    /**
      * @brief Initialize the ONNX session with the given model.
      *
      * @param model_path Path to the .onnx model file.
-     * @return FACE_DETECT_SUCCESS on success, otherwise error code.
+     * @return SUCCESS on success, otherwise an error code.
      */
     FaceDetectionResponse init_session(const char *model_path);
 
     /**
-     * @brief Detect face from an image file.
+     * @brief Release the ONNX session and free associated resources.
+     *
+     * Call this when the library is no longer needed (e.g. at program shutdown).
+     * Safe to call even if the session was never initialized or already released.
+     */
+    void release_session(void);
+
+    /**
+     * @brief Detect a face from an image file.
      *
      * @param image_path Path to the image file (supported formats: JPEG, PNG, etc.).
-     * @param out_box Pointer to a FaceBox structure that will be filled on success.
-     * @return FACE_DETECT_SUCCESS if exactly one face was detected and returned,
-     *         FACE_DETECT_NO_FACE or FACE_DETECT_MULTIPLE_FACES otherwise,
-     *         or other error codes.
+     * @param out_box    Pointer to a FaceBox that will be filled on success.
+     * @return SUCCESS if exactly one face was detected,
+     *         NO_FACE or MULTIPLE_FACES otherwise,
+     *         or another error code on failure.
      */
     FaceDetectionResponse detect_face_from_file(const char *image_path, FaceBox *out_box);
 
     /**
-     * @brief Detect face from image data in memory.
+     * @brief Detect a face from image data in memory.
      *
-     * @param bytes Pointer to image bytes (JPEG, PNG, etc.).
-     * @param len   Size of the image data in bytes.
-     * @param out_box Pointer to a FaceBox structure that will be filled on success.
+     * @param bytes   Pointer to encoded image bytes (JPEG, PNG, etc.).
+     * @param len     Size of the image data in bytes.
+     * @param out_box Pointer to a FaceBox that will be filled on success.
      * @return Same as detect_face_from_file().
      */
     FaceDetectionResponse detect_face_from_memory(const unsigned char *bytes, size_t len, FaceBox *out_box);
-
-    /**
-     * @brief the ONNX session and free associated resources.
-     * Call this when the library is no longer needed (e.g. at program shutdown).
-     */
-    void release_session(void);
 
 #ifdef __cplusplus
 }

@@ -5,10 +5,10 @@ CURDIR = $(MAKEDIR)
 ROOT = $(MAKEDIR)\..\..
 
 CFLAGS = /I "include"
-LIBS = $(ROOT)\target\release\facedetector.dll.lib
+LIBS = $(ROOT)\bin\windows\facedetector.dll.lib
 SRC = main.c
 TARGET = main.exe
-DLL_SOURCE = $(ROOT)\target\release\facedetector.dll
+DLL_SOURCE = $(ROOT)\bin\windows\facedetector.dll
 DLL_DEST = $(CURDIR)\facedetector.dll
 
 all: help

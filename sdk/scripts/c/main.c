@@ -5,6 +5,8 @@
 
 int main()
 {
+    printf("facedetector v%s\n", facedetector_version());
+
     const char *model_path = "../../models/yolov11s-face.onnx";
     const char *image_path = "../../assets/cool_girl.jpg";
 
