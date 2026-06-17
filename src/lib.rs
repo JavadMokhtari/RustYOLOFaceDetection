@@ -47,6 +47,13 @@ use crate::utils::convert_cstring_to_path;
 use std::os::raw::{c_char, c_int};
 // use std::time;
 
+/// Returns the library version string as a static C-compatible pointer.
+/// The returned pointer is valid for the lifetime of the program.
+#[unsafe(no_mangle)]
+pub extern "C" fn facedetector_version() -> *const c_char {
+    concat!(env!("CARGO_PKG_VERSION"), "\0").as_ptr() as *const c_char
+}
+
 /// Initializes the face detection ONNX session from a model file path.
 ///
 /// This function must be called before any detection functions. It loads the model,
