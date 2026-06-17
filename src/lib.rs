@@ -25,7 +25,7 @@
 //!     FaceBox box;
 //!     int result = detect_face_from_file("face.jpg", &box);
 //!     if (result == 0) {
-//!         printf("Face at: x1=%f, y1=%f, x2=%f, y2=%f\n", 
+//!         printf("Face at: x1=%f, y1=%f, x2=%f, y2=%f\n",
 //!                box.x1, box.y1, box.x2, box.y2);
 //!     }
 //!     
@@ -269,8 +269,11 @@ pub extern "C" fn detect_face_from_memory(
     len: usize,
     out_box: *mut FaceBox,
 ) -> c_int {
-    if bytes.is_null() || len == 0 {
-        return FaceDetectionResponse::EmptyInputImage as c_int;
+    if len == 0 {
+        return FaceDetectionResponse::ZeroLengthBytesError as c_int;
+    }
+    if bytes.is_null() {
+        return FaceDetectionResponse::EmptyInputImageError as c_int;
     }
 
     let byte_slice = unsafe { std::slice::from_raw_parts(bytes, len) };
