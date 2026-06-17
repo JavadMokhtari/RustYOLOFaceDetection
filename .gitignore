@@ -1,5 +1,6 @@
 .idea
-/target
-assets/
-models/
-sdk/
+target/
+sdk/**
+!sdk/README.md
+!sdk/scripts/
+!sdk/scripts/**
