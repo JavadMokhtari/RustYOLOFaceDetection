@@ -19,28 +19,29 @@ A lightweight face detection SDK implemented in Rust and exposed through a C-com
 ## Package Contents
 
 ```text
-face-detector-sdk-0.1.0/
+face-detector-sdk/
 │
 ├── assets/
 │   ├── boy_two_faces.jpg
 │   └── cool_girl.jpg
-│
-├── examples/
-│   └── python/
 │
 ├── bin/
 │   └── windows/
 │       ├── facedetector.dll
 │       └── facedetector.dll.lib
 │
-├── include/
-│   └── facedetector.h
-│
 ├── models/
 │   └── yolov11s-face.onnx
 │
-├── main.c
-├── Makefile
+├── scripts/
+│   ├── c
+│   |   ├── include/
+│   |   |   └── facedetector.h
+│   |   ├── main.c
+│   |   └── Makefile
+│   └── python
+│       └── facedetector.dll.lib
+│
 └── README.md
 ```
 ---
@@ -70,7 +71,12 @@ x64 Native Tools Command Prompt for VS 2022
 Navigate to:
 
 ```bat
-cd face-detector-sdk-0.1.0
+cd face-detector-sdk-VERSION/scripts/c
+```
+
+Display help:
+```bat
+nmake
 ```
 
 Build:
