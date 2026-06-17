@@ -298,7 +298,5 @@ using the exported functions in `facedetector.dll`.
 
 ## License
 
-Copyright (c) 2026.
-
-All rights reserved.
+MIT
 
