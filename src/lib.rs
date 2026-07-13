@@ -285,6 +285,10 @@ pub extern "C" fn detect_face_from_memory(
 
     let byte_slice = unsafe { std::slice::from_raw_parts(bytes, len) };
 
+    if byte_slice.len() == 0 {
+        return FaceDetectionResponse::ZeroLengthBytesError as c_int;
+    }
+
     let img = match image::load_from_memory(byte_slice) {
         Ok(v) => v,
         Err(_) => return FaceDetectionResponse::ImageLoadingError as c_int,
